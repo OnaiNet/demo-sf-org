@@ -1,0 +1,70 @@
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false">
+<div ng-show="isWorking()">
+    <p>Working</p>
+</div>
+<script>
+    $("#header").html("FAQ Demo");
+</script>
+
+<div ng-show="!isWorking()">
+
+    <h3>FAQ - {{category}}</h3>
+
+    <!-- This div is only displayed in desktops (see below for mobile phones)-->
+    <div class="hidden-phone">
+
+    	<select ng-model="category">
+    		<option value="Time Entry" selected="selected">Time Entry</option>
+    		<option value="Application">Application</option>
+    	</select>
+    	<br />
+
+        <div style="float: left">
+            <div style="margin-bottom: 10px;">
+                <input type="text" ng-model="searchTerm" class="search-query" placeholder="Search" />
+
+                <p class="btn btn-primary" ng-click="doSearch(searchString)">Go</p>
+            </div>
+        </div>
+
+        <div style="float: right">
+            <a href="#/new" class="btn btn-primary">New</a>
+        </div>
+
+        <h4>Topics</h4>
+        <ul>
+	        <li ng-repeat="category in categories">
+	        	<a ng-click="scrollTo('{{category.name}}')" href="javascript://">{{category.name}}</a>
+	        </li>
+        </ul>
+
+        <div ng-repeat="category in categories">
+        	<h4 id="{{category.name}}">{{category.name}}</h4>
+        	<div ng-repeat="entry in category.entries">
+	            <div class='question'>{{entry.Question__c}}</div>
+	            <div class='answer' ng-bind-html='entry.Answer__c'></div>
+	        </div>
+        </div>
+    </div>
+
+    <!-- This div is only displayed in mobile phones (see above for desktops) -->
+    <div class="visible-phone">
+        <form class="form-inline">
+            <input type="text" ng-model="searchTerm" class="input-medium search-query" placeholder="Search" />
+            <button ng-click="doSearch(searchString)" class="btn btn-primary">Go</button>
+            <button ng-click="doCreate()" class="btn btn-default">&nbsp;+&nbsp;</button>
+        </form>
+
+        <table class="table">
+            <tr ng-click="doView(entry.Id)" ng-repeat="entry in entries">
+                <td><b class="fullname">{{entry.Question__c}}</b>
+                    <br />
+                    <small class="metadata">{{entry.Answer__c}}</small>
+                </td>
+                <td><i class="icon-chevron-right"></i></td>
+            </tr>
+        </table>
+    </div>
+
+</div>
+</apex:page>

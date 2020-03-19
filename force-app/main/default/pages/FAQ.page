@@ -1,0 +1,473 @@
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false" docType="html-5.0">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"></meta>
+    <style>
+        body {
+            padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+        }
+
+        h1, h2, h3, h4 {
+        	clear: both;
+        }
+
+        ul {
+        	display: block;
+        	clear: both;
+        }
+
+        .button {
+            text-align: center;
+        }
+
+        .question {
+        	margin: 5px 0px;
+        	font-weight: bold;
+        	font-size: 12pt;
+        	color: #009;
+        }
+
+        .answer {
+        	margin-left: 20px;
+        }
+    </style>
+
+
+    <link href="{!URLFOR($Resource.AngularMP, 'css/bootstrap.min.css')}" rel="stylesheet" />
+    <link href="{!URLFOR($Resource.AngularMP, 'css/bootstrap-responsive.min.css')}" rel="stylesheet" />
+
+</head>
+<body ng-app="AngularSFDemo">
+    <div  class="navbar navbar-inverse navbar-fixed-top" ng-controller="LoginCtrl">
+        <div class="navbar-inner">
+            <div class="container">
+                <a class="brand" href="#">Comphealth</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="ngView"></div>
+    </div>
+
+
+<script type="text/javascript">
+    //Get configuration from environment variables (via heroku or localhost env)
+    var configFromEnv = {};
+    configFromEnv.client_id = '<%= client_id %>';
+    configFromEnv.app_url = '<%= app_url %>';
+    configFromEnv.sessionId = "{!$API.session_Id}";
+
+
+</script>
+
+
+<script src="{!URLFOR($Resource.AngularMP, 'js/vendor/jquery-2.0.0.min.js')}"></script>
+<script src="{!URLFOR($Resource.AngularMP, 'js/vendor/underscore-1.4.4.min.js')}"></script>
+<script src="{!URLFOR($Resource.AngularMP, 'js/vendor/angular.1.0.6.min.js')}"></script>
+<script src="{!URLFOR($Resource.AngularMP, 'js/vendor/dropdownToggle.js')}"></script>
+
+
+<script src="{!URLFOR($Resource.AngularMP, 'js/sdk/forcetk.mobilesdk.js')}"></script>
+<script src="{!URLFOR($Resource.AngularMP, 'js/sdk/smartsync.js')}"></script>
+<script src="{!URLFOR($Resource.AngularMP, 'js/sdk/angular-force.js')}"></script>
+<script src="{!URLFOR($Resource.AngularMP, 'js/sdk/forcetk.ui.js')}"></script>
+<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.6/angular-sanitize.js"></script>
+
+
+<script type="text/javascript">
+
+// Init.js
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * This initializes AngularJS app. Place this file BEFORE app.js (where your actual app is located).
+ */
+//var app = angular.module('AngularSFDemo', ['AngularForce', 'AngularForceObjectFactory', 'Contact', 'ui.bootstrap.dropdownToggle']);
+//app.constant('SFConfig', getSFConfig());
+
+var app = angular.module('AngularSFDemo', ['AngularForce', 'AngularForceObjectFactory', 'FAQ', 'ui.bootstrap.dropdownToggle', 'ngSanitize']);
+var SFConfig = getSFConfig();
+
+SFConfig.maxListSize = 25;
+app.constant('SFConfig', SFConfig);
+//app.constant('DefaultCategory', 'Time Entry');
+// Hack because I don't understand Angular (2015-12-21 kag)
+var DEFAULT_CATEGORY = 'Time Entry';
+
+function initApp(options, forcetkClient) {
+    options = options || {};
+    options.loginUrl = SFConfig.sfLoginURL;
+    options.clientId = SFConfig.consumerKey;
+    options.apiVersion = 'v27.0';
+    options.userAgent = 'SalesforceMobileUI/alpha';
+    options.proxyUrl = options.proxyUrl || SFConfig.proxyUrl;
+
+    //In VF, you should get sessionId and use that as accessToken while initializing forcetk(Force.init)
+    if (SFConfig.sessionId) {
+        options.accessToken = SFConfig.sessionId;
+    }
+
+    //Init force
+    Force.init(options, options.apiVersion, forcetkClient);
+   // SFConfig.client = Force.forcetkClient;
+
+
+    //sforce.connection.init(options.accessToken, options.instanceUrl + '/services/Soap/u/' + options.apiVersion, options.useProxy);
+    if (navigator.smartstore) {
+        SFConfig.dataStore = new Force.StoreCache('sobjects', [
+            {path: 'Name', type: 'string'},
+            {path: 'attributes.type', type: 'string'}
+            ], 'Id');
+
+        SFConfig.dataStore.init();
+    }
+}
+
+//mockStore.useSessionStorage();
+
+//Uncomment below and set accessToken(= sessionId), instanceUrl and proxyUrl to test smartstore (mock version - coz real smartstore is part of cordova)
+// inside the browser
+//initApp({
+//    accessToken: '00Di0000000JEm3!AQ4AQLnaKs7PPHaRd0xjvJwJkf6O.9R7ECpU5mndDb1DwYsoxhMDrCyEag.5Ws_HFI5fY.9fYgsQ_4F1D5vXltKmK5b7guCK',
+//    instanceUrl: 'https://na15.salesforce.com',
+//    proxyUrl: 'http://localhost:3000/proxy/'
+//});
+
+app.config(function ($routeProvider) {
+    $routeProvider
+	    .when('/', {controller: HomeCtrl, templateUrl: 'apex/MobileSample_ngHome'})
+	    .when('/login', {controller: LoginCtrl, templateUrl: 'apex/MobileSample_ngLogin'})
+	    .when('/logout', {controller: LoginCtrl, templateUrl: 'apex/MobileSample_ngLogout'})
+	    .when('/callback', {controller: CallbackCtrl, templateUrl: 'partials/MobileSample_ngCallback'})
+	    .when('/list', {controller: "FAQListCtrl", templateUrl: 'apex/ngFAQList'})
+	    .when('/view/:entryId', {controller: "FAQViewCtrl", templateUrl: 'apex/MobileSample_ngContactView'})
+	    .when('/edit/:entryId', { controller: "FAQDetailCtrl", templateUrl: 'apex/MobileSample_ngContactEdit'})
+	    .when('/new', { controller: "FAQDetailCtrl", templateUrl: 'apex/MobileSample_ngContactEdit'})
+	    .otherwise({redirectTo: '/'});
+});
+
+
+/**
+ * Please configure Salesforce consumerkey, proxyUrl etc in getSFConfig().
+ *
+ * SFConfig is a central configuration JS Object. It is used by angular-force.js and also your app to set and retrieve
+ * various configuration or authentication related information.
+ *
+ * Note: Please configure SFConfig Salesforce consumerkey, proxyUrl etc in getSFConfig() below.
+ *
+ * @property SFConfig Salesforce Config object with the following properties.
+ * @attribute {String} sfLoginURL       Salesforce login url
+ * @attribute {String} consumerKey      Salesforce app's consumer key
+ * @attribute {String} oAuthCallbackURL OAuth Callback URL. Note: If you are running on Heroku or elsewhere you need to set this.
+ * @attribute {String} proxyUrl         URL to proxy cross-domain calls. Note: This nodejs app acts as a proxy server as well at <location>/proxy/
+ * @attribute {String} client           ForcetkClient. Set by forcetk lib
+ * @attribute {String} sessionId        Session Id. Set by forcetk lib
+ * @attribute {String} apiVersion       REST Api version. Set by forcetk (Set this manually for visualforce)
+ * @attribute {String} instanceUrl      Your Org. specific url. Set by forcetk.
+ *
+ * @returns SFConfig object depending on where (localhost v/s heroku v/s visualforce) the app is running.
+ */
+ function getSFConfig() {
+    var location = document.location;
+    var href = location.href;
+    if (href.indexOf('file:') >= 0) { //Phonegap
+        return {};
+    } else if (configFromEnv && configFromEnv.sessionId) { //VisualForce just sets sessionId (as that's all what is required)
+	    return {
+	        sessionId: configFromEnv.sessionId
+	    }
+	} else {
+	    if (!configFromEnv || configFromEnv.client_id == "" || configFromEnv.client_id == "undefined"
+	        || configFromEnv.app_url == "" || configFromEnv.app_url == "undefined") {
+	        throw 'Environment variable client_id and/or app_url is missing. Please set them before you start the app';
+		}
+		return {
+		    sfLoginURL: 'https://login.salesforce.com/',
+		    consumerKey: configFromEnv.client_id,
+		    oAuthCallbackURL: removeTrailingSlash(configFromEnv.app_url) + '/#/callback',
+		    proxyUrl: removeTrailingSlash(configFromEnv.app_url) + '/proxy/'
+		}
+	}
+}
+
+
+//Helper
+function removeTrailingSlash(url) {
+    return url.replace(/\/$/, "");
+}
+
+
+
+
+// App.js
+// ------------------------------------------------------------------------------------------------
+
+/**
+ * Describe Salesforce object to be used in the app. For example: Below AngularJS factory shows how to describe and
+ * create an 'FAQ' object. And then set its type, fields, where-clause etc.
+ *
+ *  PS: This module is injected into ListCtrl, EditCtrl etc. controllers to further consume the object.
+ */
+angular.module('FAQ', []).factory('FAQ', function (AngularForceObjectFactory) {
+
+var actualCategory = 'Provider Portal - ' + DEFAULT_CATEGORY;
+console.log('actualCategory = [' + actualCategory + ']');
+
+    //Describe the entry object
+    var objDesc = {
+        type: 'FAQ_Entry__c',
+        fields: ['Question__c', 'Answer__c', 'Category__c', 'Sub_Category__c', 'Divisions__c', 'Id', 'Display_Order__c'],
+        where: 'Divisions__c includes (\'CHS\') AND Category__c = \'' + actualCategory + '\' ',
+        orderBy: 'Display_Order__c',
+        limit: 200
+    };
+
+    var FAQ = AngularForceObjectFactory(objDesc);
+    return FAQ;
+    //return getFAQObject(actualCategory);
+});
+
+/*// Can't get this to work... "AngularForceObjectFactory" doesn't exist in this context... need to understand Angular better (2015-12-21 kag)
+function getFAQObject(category) {
+	return AngularForceObjectFactory({
+        type: 'FAQ_Entry__c',
+        fields: ['Question__c', 'Answer__c', 'Category__c', 'Sub_Category__c', 'Divisions__c', 'Id', 'Display_Order__c'],
+        where: 'Divisions__c includes (\'CHS\') AND Category__c = \'' + category + '\' ',
+        orderBy: 'Display_Order__c',
+        limit: 200
+    });
+}
+//*/
+
+function HomeCtrl($scope, AngularForce, $location, $route) {
+    var isOnline =  AngularForce.isOnline();
+    var isAuthenticated = AngularForce.authenticated();
+
+    //Offline support (only for Cordova)
+    //First check if we are online, then check if we are already authenticated (usually happens in Cordova),
+    //If Both online and authenticated(Cordova), go directly to /list view. Else show login page.
+    if(!isOnline) {
+        if(!isAuthenticated) {//MobileWeb
+            return $location.path('/login');
+        } else {//Cordova
+            return $location.path('/list/');
+        }
+    }
+
+    //If in visualforce, directly login
+    if (AngularForce.inVisualforce) {
+        //$location.path('/login');
+           AngularForce.login(function() {
+            $location.path('/list/');
+           });
+    } else if (AngularForce.refreshToken) { //If web, try to relogin using refresh-token
+        AngularForce.login(function () {
+            $location.path('/list/');
+            $scope.$apply();//Required coz sfdc uses jquery.ajax
+        });
+    } else {
+        $location.path('/login');
+    }
+}
+
+function LoginCtrl($scope, AngularForce, $location) {
+    //Usually happens in Cordova
+    if (AngularForce.authenticated()) {
+        return $location.path('/list/');
+    }
+
+    $scope.login = function () {
+        //If in visualforce, 'login' = initialize entity framework
+        if (AngularForce.inVisualforce) {
+           AngularForce.login(function() {
+            $location.path('/list/');
+           });
+        } else {
+            AngularForce.login();
+        }
+    };
+
+
+
+    $scope.isLoggedIn = function () {
+        return AngularForce.authenticated();
+    };
+
+    $scope.logout = function () {
+        AngularForce.logout(function () {
+            //Now go to logout page
+            $location.path('/logout');
+            $scope.$apply();
+        });
+    };
+}
+
+function CallbackCtrl($scope, AngularForce, $location) {
+    AngularForce.oauthCallback(document.location.href);
+
+    //Note: Set hash to empty before setting path to /list to keep the url clean w/o oauth info.
+    //..coz oauth CB returns access_token in its own hash making it two hashes (1 from angular,
+    // and another from oauth)
+    $location.hash('');
+    $location.path('/list');
+}
+
+function FAQListCtrl($scope, AngularForce, $location, $anchorScroll, FAQ) {
+    if (!AngularForce.authenticated()) {
+        return $location.path('/home');
+    }
+
+    $scope.searchTerm = '';
+    $scope.working = false;
+    $scope.category = 'Time Entry';
+
+    $scope.scrollTo = function(id) {
+console.log('Attempt to scroll to: [' + $location.hash(id) + ']');
+		$location.hash(id);
+		$anchorScroll();
+	};
+
+    FAQ.query(function (data) {
+        $scope.categories = getNestedFAQEntries(data.records);
+console.log('data.records:');
+console.log(data.records);
+        $scope.$apply();//Required coz sfdc uses jquery.ajax
+    }, function (data) {
+        alert('Query Error');
+    });
+
+    $scope.isWorking = function () {
+        return $scope.working;
+    };
+
+    $scope.doSearch = function () {
+        FAQ.search($scope.searchTerm, function (data) {
+console.log('do search = [' + $scope.searchTerm + ']');
+            $scope.categories = getNestedFAQEntries(data);
+            $scope.$apply();//Required coz sfdc uses jquery.ajax
+        }, function (data) {
+        });
+    };
+
+    $scope.doView = function (entryId) {
+        console.log('doView');
+        $location.path('/view/' + entryId);
+    };
+
+    $scope.doCreate = function () {
+        $location.path('/new');
+    }
+}
+
+function getNestedFAQEntries(records) {
+	var categories = [];
+	var lastCategoryName = null;
+	var category = null;
+
+	for (var x = 0; x < records.length; x++) {
+		var categoryName = records[x].Sub_Category__c;
+		if (categoryName !== lastCategoryName) {
+			// Push it if not empty
+			category !== null && categories.push(category);
+			// Clear it out
+			category = {name: categoryName, entries: []};
+		}
+		category.entries.push(records[x]);
+		lastCategoryName = categoryName;
+	}
+	// Push last category on
+	category !== null && categories.push(category);
+	return categories;
+}
+
+function FAQCreateCtrl($scope, $location, FAQ) {
+    $scope.save = function () {
+        FAQ.save($scope.entry, function (entry) {
+            var e = entry;
+            $scope.$apply(function () {
+                $location.path('/view/' + e.Id);
+            });
+        });
+    }
+}
+
+function FAQViewCtrl($scope, AngularForce, $location, $routeParams, FAQ) {
+
+    AngularForce.login(function () {
+        FAQ.get({id: $routeParams.entryId}, function (entry) {
+            self.original = entry;
+            $scope.entry = new FAQ(self.original);
+            $scope.$apply();//Required coz sfdc uses jquery.ajax
+        });
+    });
+
+}
+
+function FAQDetailCtrl($scope, AngularForce, $location, $routeParams, FAQ) {
+    var self = this;
+
+    if ($routeParams.entryId) {
+        AngularForce.login(function () {
+            FAQ.get({id: $routeParams.entryId},
+                function (entry) {
+                    self.original = entry;
+                    $scope.entry = new FAQ(self.original);
+                    $scope.$apply();//Required coz sfdc uses jquery.ajax
+                });
+        });
+    } else {
+        $scope.entry = new FAQ();
+        //$scope.$apply();
+    }
+
+    $scope.isClean = function () {
+        return angular.equals(self.original, $scope.entry);
+    }
+
+    $scope.destroy = function () {
+        self.original.destroy(
+            function () {
+                $scope.$apply(function () {
+                    $location.path('/list');
+                });
+            },
+            function (errors) {
+                alert("Could not delete entry!\n" + JSON.parse(errors.responseText)[0].message);
+            }
+        );
+    };
+
+    $scope.save = function () {
+        if ($scope.entry.Id) {
+            $scope.entry.update(function () {
+                $scope.$apply(function () {
+                    $location.path('/view/' + $scope.entry.Id);
+                });
+
+            });
+        } else {
+            FAQ.save($scope.entry, function (entry) {
+                var c = entry;
+                $scope.$apply(function () {
+                    $location.path('/view/' + c.Id || c.id);
+                });
+            });
+        }
+    };
+
+    $scope.doCancel = function () {
+        if ($scope.entry.Id) {
+            $location.path('/view/' + $scope.entry.Id);
+        } else {
+            $location.path('/list');
+        }
+    }
+}
+
+
+
+</script>
+
+
+</body>
+</apex:page>
