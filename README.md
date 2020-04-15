@@ -12,4 +12,4 @@
 
 ['ApexClass', 'ApexPage', 'CustomObject', 'StaticResource', 'Layout']...
 
-.
+..
