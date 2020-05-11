@@ -4,7 +4,7 @@
     <description>Question for the FAQ</description>
     <externalId>false</externalId>
     <label>Question</label>
-    <length>200</length>
+    <length>250</length>
     <required>true</required>
     <trackTrending>false</trackTrending>
     <type>Text</type>
