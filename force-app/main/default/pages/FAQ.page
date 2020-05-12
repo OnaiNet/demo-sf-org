@@ -1,5 +1,6 @@
 <apex:page showHeader="false" sidebar="false" standardStylesheets="false" docType="html-5.0">
 <head>
+    <!-- HTML COMMENT -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0"></meta>
     <style>
         body {
@@ -7,12 +8,12 @@
         }
 
         h1, h2, h3, h4 {
-        	clear: both;
+            clear: both;
         }
 
         ul {
-        	display: block;
-        	clear: both;
+            display: block;
+            clear: both;
         }
 
         .button {
@@ -20,14 +21,14 @@
         }
 
         .question {
-        	margin: 5px 0px;
-        	font-weight: bold;
-        	font-size: 12pt;
-        	color: #009;
+            margin: 5px 0px;
+            font-weight: bold;
+            font-size: 12pt;
+            color: #009;
         }
 
         .answer {
-        	margin-left: 20px;
+            margin-left: 20px;
         }
     </style>
 
@@ -37,6 +38,7 @@
 
 </head>
 <body ng-app="AngularSFDemo">
+    <h1>FAQ</h1>
     <div  class="navbar navbar-inverse navbar-fixed-top" ng-controller="LoginCtrl">
         <div class="navbar-inner">
             <div class="container">
@@ -135,15 +137,15 @@ function initApp(options, forcetkClient) {
 
 app.config(function ($routeProvider) {
     $routeProvider
-	    .when('/', {controller: HomeCtrl, templateUrl: 'apex/MobileSample_ngHome'})
-	    .when('/login', {controller: LoginCtrl, templateUrl: 'apex/MobileSample_ngLogin'})
-	    .when('/logout', {controller: LoginCtrl, templateUrl: 'apex/MobileSample_ngLogout'})
-	    .when('/callback', {controller: CallbackCtrl, templateUrl: 'partials/MobileSample_ngCallback'})
-	    .when('/list', {controller: "FAQListCtrl", templateUrl: 'apex/ngFAQList'})
-	    .when('/view/:entryId', {controller: "FAQViewCtrl", templateUrl: 'apex/MobileSample_ngContactView'})
-	    .when('/edit/:entryId', { controller: "FAQDetailCtrl", templateUrl: 'apex/MobileSample_ngContactEdit'})
-	    .when('/new', { controller: "FAQDetailCtrl", templateUrl: 'apex/MobileSample_ngContactEdit'})
-	    .otherwise({redirectTo: '/'});
+        .when('/', {controller: HomeCtrl, templateUrl: 'apex/MobileSample_ngHome'})
+        .when('/login', {controller: LoginCtrl, templateUrl: 'apex/MobileSample_ngLogin'})
+        .when('/logout', {controller: LoginCtrl, templateUrl: 'apex/MobileSample_ngLogout'})
+        .when('/callback', {controller: CallbackCtrl, templateUrl: 'partials/MobileSample_ngCallback'})
+        .when('/list', {controller: "FAQListCtrl", templateUrl: 'apex/ngFAQList'})
+        .when('/view/:entryId', {controller: "FAQViewCtrl", templateUrl: 'apex/MobileSample_ngContactView'})
+        .when('/edit/:entryId', { controller: "FAQDetailCtrl", templateUrl: 'apex/MobileSample_ngContactEdit'})
+        .when('/new', { controller: "FAQDetailCtrl", templateUrl: 'apex/MobileSample_ngContactEdit'})
+        .otherwise({redirectTo: '/'});
 });
 
 
@@ -173,21 +175,21 @@ app.config(function ($routeProvider) {
     if (href.indexOf('file:') >= 0) { //Phonegap
         return {};
     } else if (configFromEnv && configFromEnv.sessionId) { //VisualForce just sets sessionId (as that's all what is required)
-	    return {
-	        sessionId: configFromEnv.sessionId
-	    }
-	} else {
-	    if (!configFromEnv || configFromEnv.client_id == "" || configFromEnv.client_id == "undefined"
-	        || configFromEnv.app_url == "" || configFromEnv.app_url == "undefined") {
-	        throw 'Environment variable client_id and/or app_url is missing. Please set them before you start the app';
-		}
-		return {
-		    sfLoginURL: 'https://login.salesforce.com/',
-		    consumerKey: configFromEnv.client_id,
-		    oAuthCallbackURL: removeTrailingSlash(configFromEnv.app_url) + '/#/callback',
-		    proxyUrl: removeTrailingSlash(configFromEnv.app_url) + '/proxy/'
-		}
-	}
+        return {
+            sessionId: configFromEnv.sessionId
+        }
+    } else {
+        if (!configFromEnv || configFromEnv.client_id == "" || configFromEnv.client_id == "undefined"
+            || configFromEnv.app_url == "" || configFromEnv.app_url == "undefined") {
+            throw 'Environment variable client_id and/or app_url is missing. Please set them before you start the app';
+        }
+        return {
+            sfLoginURL: 'https://login.salesforce.com/',
+            consumerKey: configFromEnv.client_id,
+            oAuthCallbackURL: removeTrailingSlash(configFromEnv.app_url) + '/#/callback',
+            proxyUrl: removeTrailingSlash(configFromEnv.app_url) + '/proxy/'
+        }
+    }
 }
 
 
@@ -229,7 +231,7 @@ console.log('actualCategory = [' + actualCategory + ']');
 
 /*// Can't get this to work... "AngularForceObjectFactory" doesn't exist in this context... need to understand Angular better (2015-12-21 kag)
 function getFAQObject(category) {
-	return AngularForceObjectFactory({
+    return AngularForceObjectFactory({
         type: 'FAQ_Entry__c',
         fields: ['Question__c', 'Answer__c', 'Category__c', 'Sub_Category__c', 'Divisions__c', 'Id', 'Display_Order__c'],
         where: 'Divisions__c includes (\'CHS\') AND Category__c = \'' + category + '\' ',
@@ -323,9 +325,9 @@ function FAQListCtrl($scope, AngularForce, $location, $anchorScroll, FAQ) {
 
     $scope.scrollTo = function(id) {
 console.log('Attempt to scroll to: [' + $location.hash(id) + ']');
-		$location.hash(id);
-		$anchorScroll();
-	};
+        $location.hash(id);
+        $anchorScroll();
+    };
 
     FAQ.query(function (data) {
         $scope.categories = getNestedFAQEntries(data.records);
@@ -360,24 +362,24 @@ console.log('do search = [' + $scope.searchTerm + ']');
 }
 
 function getNestedFAQEntries(records) {
-	var categories = [];
-	var lastCategoryName = null;
-	var category = null;
+    var categories = [];
+    var lastCategoryName = null;
+    var category = null;
 
-	for (var x = 0; x < records.length; x++) {
-		var categoryName = records[x].Sub_Category__c;
-		if (categoryName !== lastCategoryName) {
-			// Push it if not empty
-			category !== null && categories.push(category);
-			// Clear it out
-			category = {name: categoryName, entries: []};
-		}
-		category.entries.push(records[x]);
-		lastCategoryName = categoryName;
-	}
-	// Push last category on
-	category !== null && categories.push(category);
-	return categories;
+    for (var x = 0; x < records.length; x++) {
+        var categoryName = records[x].Sub_Category__c;
+        if (categoryName !== lastCategoryName) {
+            // Push it if not empty
+            category !== null && categories.push(category);
+            // Clear it out
+            category = {name: categoryName, entries: []};
+        }
+        category.entries.push(records[x]);
+        lastCategoryName = categoryName;
+    }
+    // Push last category on
+    category !== null && categories.push(category);
+    return categories;
 }
 
 function FAQCreateCtrl($scope, $location, FAQ) {
