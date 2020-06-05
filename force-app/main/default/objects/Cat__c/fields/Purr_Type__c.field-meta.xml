@@ -3,6 +3,7 @@
     <fullName>Purr_Type__c</fullName>
     <description>Description for type of purr</description>
     <externalId>false</externalId>
+    <inlineHelpText>And some help text</inlineHelpText>
     <label>Purr Type</label>
     <required>false</required>
     <trackTrending>false</trackTrending>
